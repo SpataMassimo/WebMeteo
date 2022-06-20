@@ -1,0 +1,5 @@
+kafka-python==2.0.2
+selenium==4.1.4
+webdriver-manager==3.5.4
+pillow
+fluent-logger==0.10.0

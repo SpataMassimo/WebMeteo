@@ -1,0 +1,10 @@
+numpy
+kafka-python
+elasticsearch==8.2.0
+pillow
+tensorflow==2.8.0
+tensorframes
+tensorflowonspark
+pandas
+keras==2.8.0
+telepot==12.7

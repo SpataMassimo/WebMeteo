@@ -1,0 +1,39 @@
+version: "1.0"
+
+services:
+  elastic:
+    container_name: elastic
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    #restart: on-failure
+    ports:
+      - 9200:9200
+      - 9300:9300
+    environment:
+      - "discovery.type=single-node"
+      - "xpack.security.enabled=false"
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent localhost:9200/_cluster/health"]
+      interval: 30s
+      timeout: 30s
+      retries: 5
+    networks:
+      tap:
+        ipv4_address: 10.0.100.51
+  bash:
+    container_name: bash
+    image: bash
+    #restart: on-failure
+    volumes:
+      - ./bash/datas:/opt/datas
+    depends_on: 
+      elastic: 
+        condition: service_healthy
+    networks:
+      tap:
+
+networks:
+    tap:
+        external: true

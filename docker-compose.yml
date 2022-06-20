@@ -1,0 +1,197 @@
+version: "1.0"
+
+services:
+  kafka_zookeeper:
+    build:
+      context: ./kafka/kafka_image
+      dockerfile: Dockerfile
+    container_name: kafka_zookeeper
+    ports:
+      - 2181:2181
+    command: > 
+      bash -c "set -v
+               mkdir -p /tmp/zookeeper
+               cd /opt/kafka
+               zookeeper-server-start.sh config/zookeeper.properties"
+    networks:
+      tap:
+        ipv4_address: 10.0.100.22
+
+  kafka_ui:
+    build:
+      context: ./kafka/kafka_ui
+      dockerfile: Dockerfile.UI
+    depends_on:
+      - kafka_zookeeper
+    container_name: kafka_ui
+    ports:
+      - 8080:8080
+    networks:
+      tap:
+        ipv4_address: 10.0.100.20
+  
+  kafka_broker:
+    build:
+      context: ./kafka/kafka_image
+      dockerfile: Dockerfile
+    container_name: kafka_broker
+    depends_on:
+      - kafka_zookeeper
+      - kafka_ui
+    ports:
+      - 9092:9092
+    command: > 
+      bash -c "set -v
+               cd /opt/kafka
+               kafka-server-start.sh config/server.properties"
+    networks:
+      tap:
+        ipv4_address: 10.0.100.23
+
+  web_meteo_topics:
+    build:
+      context: ./kafka/kafka_image
+      dockerfile: Dockerfile
+    container_name: web_meteo_topics
+    command: > 
+      bash -c "set -v
+               cd /opt/kafka
+               kafka-topics.sh --bootstrap-server 10.0.100.23:9092 --list
+               kafka-topics.sh --create --bootstrap-server 10.0.100.23:9092 --replication-factor 1 --partitions 1 --topic web_image
+               kafka-topics.sh --create --bootstrap-server 10.0.100.23:9092 --replication-factor 1 --partitions 1 --topic web_data
+               kafka-topics.sh --create --bootstrap-server 10.0.100.23:9092 --replication-factor 1 --partitions 2 --topic restart_request
+               kafka-topics.sh --bootstrap-server 10.0.100.23:9092 --list"
+    depends_on: 
+        - kafka_zookeeper
+        - kafka_ui
+        - kafka_broker
+    networks:
+      tap:
+  
+  elastic:
+    container_name: elastic
+    build: 
+      context: ./elasticsearch
+      dockerfile: Dockerfile
+    volumes:
+      - ./resources/dataset/datas:/opt/datas
+    restart: on-failure
+    ports:
+      - 9200:9200
+      - 9300:9300
+    environment:
+      - "discovery.type=single-node"
+      - "xpack.security.enabled=false"
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent localhost:9200/_cluster/health"]
+      interval: 30s
+      timeout: 30s
+      retries: 5
+    networks:
+      tap:
+        ipv4_address: 10.0.100.51
+    
+  load_data:
+    container_name: load_data
+    build:
+      context: ./loader
+      dockerfile: Dockerfile
+    #restart: on-failure
+    volumes:
+      - ./resources/dataset:/opt/dataset
+    depends_on: 
+      elastic: 
+        condition: service_healthy
+    networks:
+      tap:
+  
+  spark:
+    build:
+      context: ./spark
+      dockerfile: Dockerfile
+    container_name: spark
+    volumes:
+      - ./spark/code:/opt/spark/code
+      - ./resources:/opt/spark/demo
+    ports:
+      - 4040:4040
+    command: |
+        bash -c "spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.1  code/process_datas.py"
+    depends_on:
+      - load_data
+    networks:
+        tap:
+    mem_limit: 2g
+  
+  kibana:
+    build:
+      context: ./kibana
+      dockerfile: Dockerfile
+    container_name: kibana
+    ports:
+      - 5601:5601
+    depends_on:
+      - kafka
+      - load_data
+    networks:
+        tap:
+          ipv4_address: 10.0.100.52
+    mem_limit: 1g
+
+  web_data:
+    build:
+      context: ./web_resources/selenium-python
+      dockerfile: Dockerfile
+    container_name: web_data
+    restart: always
+    depends_on:
+      - fluentd
+    volumes:
+      - ./web_data/bin:/usr/src/app/
+    command: >
+        bash -c "set -v
+                cd /usr/src/app/
+                python3 WebData.py"
+    mem_limit: 512m
+    networks:
+        tap:
+
+  web_image:
+    build:
+      context: ./web_resources/selenium-python
+      dockerfile: Dockerfile
+    container_name: web_image
+    restart: always
+    depends_on:
+      - fluentd
+    volumes:
+      - ./web_image/bin:/usr/src/app/
+    command: >
+        bash -c "set -v
+                cd /usr/src/app/
+                python3 WebImage.py"
+    mem_limit: 1g
+    networks:
+        tap:
+
+  fluentd:
+    container_name: fluentd
+    build:
+      context: ./fluentd
+      dockerfile: Dockerfile
+    volumes:
+      - ./fluentd/conf:/fluentd/etc/
+      - ./fluentd/datas:/opt/datas
+    depends_on:
+      - load_data
+    restart: always
+    command: >
+             bash -c 'fluentd -c /fluentd/etc/python.conf'
+    mem_limit: 512m
+    networks:
+      tap:
+
+networks:
+  tap:
+    external: true

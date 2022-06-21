@@ -127,3 +127,5 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+kafka/kafka_image/setup/kafka_2.13-3.1.0.tgz
+spark/setup/spark-3.2.1-bin-hadoop3.2.tgz

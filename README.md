@@ -18,12 +18,11 @@ the status of a particular event and show precise data predictions!
 </p>
 
 ## How to Run
-
-'''shell
+```shell
 git clone https://github.com/erotablas/WebMeteo.git
 cd WebMeteo
 docker-compose up --build
-'''
+```
 
 ## Links
 | Container     | URL                                        | Description                                     |

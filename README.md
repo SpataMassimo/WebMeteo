@@ -20,11 +20,15 @@ the status of a particular event and show precise data predictions!
   <img src="gitData/pipeline.png" alt="pipeline" width=800/>
 </p>
 
+## INFO
+You have to include Kafka and Spark setups according to their dockerfiles.
+
 ## How to Run
 ```shell
 git clone https://github.com/erotablas/WebMeteo.git
 # or https://github.com/SpataMassimo/WebMeteo.git
 cd WebMeteo
+docker network create --subnet=10.0.100.0/24 tap
 docker-compose up --build
 ```
 

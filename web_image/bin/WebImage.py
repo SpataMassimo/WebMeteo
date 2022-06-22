@@ -12,6 +12,8 @@ from fluent import event
 url_image = "https://www.skylinewebcams.com/en/webcam/italia/sicilia/catania/centro-di-catania.html"
 time_schedule = 120000
 path_save = "images/"
+if( not os.path.exists(path_save)):
+    os.mkdir(path_save)
 
 topic = os.getenv("KAFKA_TOPIC", "restart_request")
 try:

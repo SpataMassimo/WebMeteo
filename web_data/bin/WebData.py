@@ -1,11 +1,11 @@
 import os
 import time
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+# from selenium.webdriver.common.by import By
+# from selenium.webdriver.support.wait import WebDriverWait
+# from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 import requests
-from config_setting import *
+# from config_setting import *
 from fluent import sender
 from fluent import event
 
@@ -41,8 +41,10 @@ def meteo():
             time.sleep(3)
             continue
         soup = BeautifulSoup(page.text, 'html.parser')
+
         #send_datas(driver, cnd, tmp, hmd, prs, vsb, wnd)
         send_datas(soup)
+        
         time.sleep(int(time_schedule))
         #driver.refresh()
         
@@ -52,7 +54,8 @@ def send_datas(soup):  #(driver, cnd, tmp, hmd, prs, vsb, wnd):
     day = time.strftime("%Y-%m-%d %H:%M:%S")
     try:
         #condition = driver.find_element(By.XPATH, cnd).text
-        condition = soup.find(id = "tempoinatto-dati").findAll("p")[7].text    
+        condition = soup.find(id = "tempoinatto-dati").findAll("p")[7].text
+        condition = str(condition).upper()
     except:
         condition = None
     try:
@@ -73,11 +76,10 @@ def send_datas(soup):  #(driver, cnd, tmp, hmd, prs, vsb, wnd):
         humidity = int(humidity)
     except:
         humidity = -999
-    
     try:
         #visibility = driver.find_element(By.XPATH, vsb).text
-        visibility = soup.find(id = "tempoinatto-dati").findAll("p")[6].text[1:3]
-        visibility = int(visibility[1:-2])
+        visibility = soup.find(id = "tempoinatto-dati").findAll("p")[6].text
+        visibility = int(visibility[1:-3])
     except: 
         visibility = -999
     try:

@@ -34,9 +34,9 @@ def meteo():
     while True:
         #Load resource with BeautifulSoup
         try:
-            page = requests.get(url_data)
+            page = requests.get(url_data, timeout=20)
             while (page.status_code != 200):
-                page = requests.get(url_data)
+                page = requests.get(url_data, timeout=20)
         except:
             time.sleep(3)
             continue

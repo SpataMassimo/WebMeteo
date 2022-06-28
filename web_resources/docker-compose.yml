@@ -1,14 +1,29 @@
 version: "1.0"
 
 services:
-  webmeteo_simulation:
+  webmeteo_image_simulation:
     build:
       context: ./selenium-python
       dockerfile: Dockerfile
-    container_name: webmeteo_simulation
+    container_name: webmeteo_image_simulation
     #restart: always
     volumes:
-      - ./webmeteo_simulation/bin:/usr/src/app/
+      - ./webmeteo_image_simulation/bin:/usr/src/app/
+    command: >
+        bash -c "set -v
+                cd /usr/src/app/
+                python3 WebMeteo_simulation.py"
+    networks:
+          tap:
+  
+  webmeteo_data_simulation:
+    build:
+      context: ./selenium-python
+      dockerfile: Dockerfile
+    container_name: webmeteo_data_simulation
+    #restart: always
+    volumes:
+      - ./webmeteo_data_simulation/bin:/usr/src/app/
     command: >
         bash -c "set -v
                 cd /usr/src/app/

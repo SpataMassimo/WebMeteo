@@ -16,7 +16,6 @@ consumer = KafkaConsumer(topic, bootstrap_servers=['10.0.100.23:9092'], \
     auto_offset_reset='latest',  enable_auto_commit=True, consumer_timeout_ms=time_schedule, \
     value_deserializer=lambda x: loads(x.decode('utf-8')))
 
-
 def meteo():
 	os.environ['TZ'] = 'Europe/Rome'
 	time.tzset()
@@ -42,15 +41,15 @@ def meteo():
 	
 	print("NO MORE IMAGE TO SEND!!!")
 	
-
 def send_image(image, name_img):
 	day = time.strftime("%Y-%m-%d %H:%M:%S")
 	buffered = BytesIO()
 	image.save(buffered, format="PNG")
 	image_string = base64.b64encode(buffered.getvalue()).decode()
-	print("IMAGE SEND TO FLUENTD")
-	print("Image: " +name_img)
+	print("IMAGE SENT TO FLUENTD")
+	print("Image: " + name_img)
 	print("------------------------------------------------")	
+
 	sender.setup('WebMeteo', host='fluentd', port=24224)
 	event.Event('image',{"Image":image_string,"Schedule": day})
 

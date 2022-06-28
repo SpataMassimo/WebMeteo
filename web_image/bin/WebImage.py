@@ -12,7 +12,7 @@ from fluent import event
 url_image = "https://www.skylinewebcams.com/en/webcam/italia/sicilia/catania/centro-di-catania.html"
 time_schedule = 120000
 path_save = "images/"
-if( not os.path.exists(path_save)):
+if(not os.path.exists(path_save)):
     os.mkdir(path_save)
 
 topic = os.getenv("KAFKA_TOPIC", "restart_request")
@@ -59,19 +59,24 @@ def meteo():
 
 def send_screenshoot(image_element):
     day = time.strftime("%Y-%m-%d %H:%M:%S")
+
     image_name = day + ".png"
     image_path = path_save + image_name
     image_element.screenshot(image_path)
     image = Image.open(image_path)
+
     #Resize image, based on model input size
     size = (720,390)
     image = image.resize(size)
+
     #Convert image to base64
     buffered = BytesIO()
     image.save(buffered, format="PNG")
     image_string = base64.b64encode(buffered.getvalue()).decode()
+
     sender.setup('WebMeteo', host='fluentd', port=24224)
     event.Event('image',{"Image":image_string, "Schedule": day})
+    
     #Remove image from disk
     os.unlink(image_path)
     

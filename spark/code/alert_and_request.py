@@ -19,8 +19,8 @@ def alert_condition(class_prediction, count_alert):
           return 0
 
 def send_alert():
-    token = '5366631076:AAE5RW3T8datNDqBoWTGpGqJsgtwbeWunUU'
-    chat_id= -1001683360839
+    token = 'YOUR TOKEN'
+    chat_id= YOUR_ID
     message = "TEST  WEBAPP - .....ALLERTA METEO..... - Catania - Maltempo con possibili precipitazioni...."
 
     bot = telepot.Bot(token)
